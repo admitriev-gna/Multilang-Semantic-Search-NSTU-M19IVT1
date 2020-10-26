@@ -9,3 +9,9 @@
 **The Database contains:** "I want to buy a cola", "I want to buy a sandwich", "I want to buy a burger"
 
 **The server returns:** "I want to buy a burger"
+
+### Trello:
+https://trello.com/b/bWfnQuwT/multilang-semantic-search
+
+### Google drive (for text files):
+https://drive.google.com/drive/folders/1xJDMeLflCjUND9dpSWwJMyWv63JYDn29?usp=sharing

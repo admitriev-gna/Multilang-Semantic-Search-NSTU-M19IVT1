@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mutlilang Project</title>
+</head>
+<body>
+<h1>Phrases List</h1>
+<a href="{% url 'phrases_new' %}">Create New Phrase</a><br><br>
+<table border="1">
+    <tr>
+        <th>Name</th>
+        <th>Identity Number</th>
+        <th>Action</th>
+    </tr>
+    {% for phrase in object_list %}
+    <tr>
+        <td>{{ phrase.name }}</td>
+        <td>{{ phrase.identityNumber }}</td>
+        <td>
+            <a href="{% url 'phrases_detail' phrase.id %}">Detail</a>
+            <a href="{% url 'phrases_edit' phrase.id %}">Edit</a>
+            <a href="{% url 'phrases_delete' phrase.id %}">Delete</a>
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="3"><b>Data is empty! Please, add data</b></td></tr>
+    {% endfor %}
+</table>
+</body>
+</html>

@@ -1,19 +1,26 @@
 import os
+from sentence_transformers import SentenceTransformer, util
+import torch
 
 
 class SemanticSearch:
     def __init__(self, lang):
         self.lang = lang
         self.embedding_model_path = os.path.join('/', 'ss_model')
+        self.embedder = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')
         self.index = None
+        self.training_data = None
 
     def training(self, training_phrases):
-        # тренировка self.index
-        pass
+        self.index = self.embedder.encode(training_phrases, convert_to_tensor=True)
+        self.training_data = training_phrases
+        print('[SEMANTIC SEARCH] Training is completed')
 
     def predict(self, phrase):
-        if self.index is None:
+        if self.index is None or self.training_data is None:
             raise ValueError('First need to train the semantic search model!')
-        # encode
-        # min dist (angular? cos?)
-        pass
+        query_embedding = self.embedder.encode(phrase, convert_to_tensor=True)
+        cos_scores = util.pytorch_cos_sim(query_embedding, self.index)[0]
+        cos_scores = cos_scores.cpu()
+        top_results = torch.topk(cos_scores, k=1)
+        return self.training_data[int(top_results[1][0])]

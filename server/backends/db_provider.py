@@ -1,5 +1,6 @@
 import sqlite3
-
+from sentence_transformers import SentenceTransformer, util
+import torch
 
 DB_PATH = r"../../web_service/db.sqlite3"
 

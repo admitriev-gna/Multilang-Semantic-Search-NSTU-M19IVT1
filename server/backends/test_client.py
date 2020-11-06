@@ -10,4 +10,4 @@ text = 'Hello Semantic Search on Server'
 
 to_md5 = semantic_search_server_pb2.Phrase(lang='en', text=text)
 response = stub.get_semantic_search_result(to_md5)
-print(response.text)
+print(response)

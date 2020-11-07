@@ -1,0 +1,5 @@
+torch==1.7.0
+sentence_transformers==0.3.8
+grpcio==1.33.2
+grpc==1.0.0
+protobuf==3.13.0

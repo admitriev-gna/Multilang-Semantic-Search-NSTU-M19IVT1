@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">MultilangSemanticSearch</string>
+    <string name="request">request</string>
+    <string name="respond">respond</string>
+</resources>

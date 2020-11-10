@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "tutorial";
+option java_outer_classname = "HelloWorldProto";
+option objc_class_prefix = "HLW";
+
+message Phrase {
+  string lang = 1;
+  string text = 2;
+}
+
+service SemanticSearch {
+  rpc get_semantic_search_result(Phrase) returns (Phrase) {};
+}

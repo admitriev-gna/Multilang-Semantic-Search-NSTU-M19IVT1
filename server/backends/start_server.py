@@ -25,6 +25,8 @@ def server():
     provider = DbProvider(AVAILABLE_LANGS)
     for lang in AVAILABLE_LANGS:
         training_data = provider.get_phrases_by_lang(lang)
+        if len(training_data) == 0:
+            raise ValueError("Database does not contain phrases for {0} lang".format(lang))
         ss_model = SemanticSearch(lang)
         ss_model.training(training_data)
         ss_models[lang] = ss_model

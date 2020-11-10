@@ -7,7 +7,7 @@ class SemanticSearch:
     def __init__(self, lang):
         self.lang = lang
         self.embedding_model_path = os.path.join('/', 'ss_model')
-        self.embedder = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')
+        self.embedder = SentenceTransformer('distiluse-base-multilingual-cased-v2')
         self.index = None
         self.training_data = None
 

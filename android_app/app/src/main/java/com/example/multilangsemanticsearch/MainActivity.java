@@ -1,17 +1,19 @@
 package com.example.multilangsemanticsearch;
 
 import android.app.Activity;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Message;
 import android.text.TextUtils;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.WindowManager;
+import android.widget.RadioGroup;
 import android.widget.SearchView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.MenuItemCompat;
@@ -31,44 +33,43 @@ import tutorial.SemanticSearchGrpc;
 
 
 public class MainActivity extends AppCompatActivity {
-
-    // List View object
-
-    // Define array adapter for ListView
-
-    // Define array List for List View data
-
+    DBHelper dbHelper;
+    RadioGroup radioButton;
+    String lang = "en";
+    RecyclerView rv;
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        dbHelper = new DBHelper(this);
 
-        RecyclerView rv = (RecyclerView)findViewById(R.id.rv);
+        radioButton = findViewById(R.id.toggle);
+        radioButton.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.en_lang:
+                        lang = "en";
+                        break;
+                    case R.id.ru_lang:
+                        lang = "ru";
+                        break;
+                }
+            }
+        });
+        rv = findViewById(R.id.rv);
         rv.setHasFixedSize(true);
         LinearLayoutManager llm = new LinearLayoutManager(this);
         rv.setLayoutManager(llm);
-        // initialise ListView with id
         initializeData();
-        RVAdapter adapter = new RVAdapter(persons);
-        rv.setAdapter(adapter);
-        new GrpcTask(MainActivity.this)
-                .execute(
-                        "192.168.1.3",
-                        "6066"
-                );
-        // Set adapter to ListView
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        // Inflate menu with items using MenuInflator
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu, menu);
-
-        // Initialise menu item search bar
-        // with id and take its object
         MenuItem searchViewItem
                 = menu.findItem(R.id.search_bar);
         SearchView searchView
@@ -77,20 +78,12 @@ public class MainActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(
                 new SearchView.OnQueryTextListener() {
 
-                    // Override onQueryTextSubmit method
-                    // which is call
-                    // when submitquery is searched
-
                     @Override
                     public boolean onQueryTextSubmit(String query) {
-                        // If the list contains the search query
-                        // than filter the adapter
-                        // using the filter method
-                        // with the query as its argument
                         new GrpcTask(MainActivity.this)
                                 .execute(
-                                        "192.168.1.3",
-                                        "6066"
+                                        query,
+                                        lang
                                         );
                         return false;
                     }
@@ -103,18 +96,33 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
-    private List<Person> persons;
+    private List<Massage> phrase;
     // This method creates an ArrayList that has three Person objects
 // Checkout the project associated with this tutorial on Github if
 // you want to use the same images.
     private void initializeData(){
-        persons = new ArrayList<>();
-        persons.add(new Person("Emma Wilson", "23 years old"));
-        persons.add(new Person("Lavery Maiss", "25 years old"));
-        persons.add(new Person("Lillie Watts", "35 years old"));
+        phrase = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        Cursor c = db.query("mytable", null, null, null, null, null, null);
+        if (c.moveToFirst()) {
+            int idIndex = c.getColumnIndex("id");
+            int messageIndex = c.getColumnIndex("message");
+            int langIndex = c.getColumnIndex("lang");
+            int messageResIndex = c.getColumnIndex("message_respones");
+            int langResIndex = c.getColumnIndex("lang_respones");
+
+            do {
+                Log.d("ID", "ID : " + c.getInt(idIndex));
+                phrase.add(new Massage(c.getString(messageIndex), c.getString(langIndex),
+                        c.getString(messageResIndex), c.getString(langResIndex), c.getInt(idIndex)));
+                Log.d("Message", "mes : " + c.getString(messageIndex) );
+            } while (c.moveToNext());
+        }
+        RVAdapter adapter = new RVAdapter(phrase, this);
+        rv.setAdapter(adapter);
     }
 
-    private class GrpcTask extends AsyncTask<String, Void, String> {
+    private class GrpcTask extends AsyncTask<String, Void, ArrayList<Phrase>> {
         private final WeakReference<Activity> activityReference;
         private ManagedChannel channel;
         private GrpcTask(Activity activity) {
@@ -122,32 +130,43 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected String doInBackground(String... params) {
-            Log.w("MYWORNING", "DO IN BACK");
-            String host = params[0];
-//            String message = params[1];
-            String portStr = params[1];
+        protected ArrayList<Phrase> doInBackground(String... params) {
+            String host = "192.168.1.3";
+            String portStr = "6066";
             int port = TextUtils.isEmpty(portStr) ? 0 : Integer.valueOf(portStr);
             try {
                 Log.w("Port", Integer.toString(port));
                 channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
-                Log.w("reply", "TESTING1");
+
                 SemanticSearchGrpc.SemanticSearchBlockingStub stub = SemanticSearchGrpc.newBlockingStub(channel);
-                Log.w("reply", "TESTING2");
-                Phrase request = Phrase.newBuilder().setLang("en").setText("Test").build();
-                Log.w("reply", "TESTING3");
+                ArrayList<Phrase> phrases = new ArrayList<>();
+                Phrase request = Phrase.newBuilder().setLang(params[1]).setText(params[0]).build();
                 Phrase reply = stub.getSemanticSearchResult(request);
-                Log.w("reply", reply.getText());
-
-                return reply.getText();
+                phrases.add(request);
+                phrases.add(reply);
+                return phrases;
             } catch (Exception e) {
-                Log.w("reply", "TESTING-");
-
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
                 e.printStackTrace(pw);
                 pw.flush();
-                return String.format("Failed... : %n%s", sw);
+                ArrayList<Phrase> error = new ArrayList<>();
+                error.add(Phrase.newBuilder().setLang("error").setText("Failled").build());
+                return error;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<Phrase> phrases) {
+            if (phrases.get(0).getLang() != "error") {
+                ContentValues cv = new ContentValues();
+                cv.put("message", phrases.get(0).getText());
+                cv.put("lang", phrases.get(0).getLang());
+                cv.put("message_respones", phrases.get(1).getText());
+                cv.put("lang_respones", phrases.get(1).getLang());
+                SQLiteDatabase db = dbHelper.getWritableDatabase();
+                db.insert("mytable", null, cv);
+                initializeData();
             }
         }
     }

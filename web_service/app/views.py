@@ -16,12 +16,12 @@ class PhrasesDetail(DetailView):
 
 class PhrasesCreate(CreateView):
     model = Phrases
-    fields = ['name', 'identityNumber']
+    fields = ['value','language']
     success_url = reverse_lazy('phrases_list')
 
 class PhrasesUpdate(UpdateView):
     model = Phrases
-    fields = ['name', 'identityNumber']
+    fields = ['value','language']
     success_url = reverse_lazy('phrases_list')
 
 class PhrasesDelete(DeleteView):

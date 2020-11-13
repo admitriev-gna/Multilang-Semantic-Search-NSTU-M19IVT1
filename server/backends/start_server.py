@@ -15,11 +15,26 @@ ss_models = dict()
 class DataHashServicer(semantic_search_server_pb2_grpc.SemanticSearchServicer):
     def get_semantic_search_result(self, request, context):
         response = semantic_search_server_pb2.Phrase()
-        ss_model = ss_models[request.lang]
-        response.text = ss_model.predict(request.text)
-        response.lang = request.lang
+        if request.lang == 'apply_skills':
+            update_models()
+            response.text = 'model update completed successfully'
+            response.lang = 'apply_skiils'
+        else:
+            ss_model = ss_models[request.lang]
+            response.text = ss_model.predict(request.text)
+            response.lang = request.lang
         return response
 
+
+def update_models():
+    provider = DbProvider(AVAILABLE_LANGS)
+    for lang in AVAILABLE_LANGS:
+        training_data = provider.get_phrases_by_lang(lang)
+        if len(training_data) == 0:
+            raise ValueError("Database does not contain phrases for {0} lang".format(lang))
+        ss_model = SemanticSearch(lang)
+        ss_model.training(training_data)
+        ss_models[lang] = ss_model
 
 def server():
     provider = DbProvider(AVAILABLE_LANGS)

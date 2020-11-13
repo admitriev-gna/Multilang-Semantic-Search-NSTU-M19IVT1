@@ -15,9 +15,9 @@ class DbProvider:
             raise ValueError('Incorrect language code name')
         with self.connection:
             cur = self.connection.cursor()
-            command = "SELECT value FROM phrases \
-                        INNER JOIN language on phrases.language_id = language.id \
-                        WHERE language.name = '{0}'".format(lang)
+            command = "SELECT value FROM app_phrases \
+                        INNER JOIN app_language on app_phrases.language_id = app_language.id \
+                        WHERE app_language.name = '{0}'".format(lang)
             cur.execute(command)
             data = cur.fetchall()
             return [el[0] for el in data]
